@@ -1,0 +1,201 @@
+package com.evaluacion.tareaevaluada3_cristianjimenez;
+
+import com.evaluacion.tareaevaluada3_cristianjimenez.Dto.CrearMuebleRequest;
+import com.evaluacion.tareaevaluada3_cristianjimenez.Dto.MuebleDto;
+import com.evaluacion.tareaevaluada3_cristianjimenez.Modelo.Mueble.Estado;
+import com.evaluacion.tareaevaluada3_cristianjimenez.Modelo.Mueble;
+import com.evaluacion.tareaevaluada3_cristianjimenez.Repositorio.MuebleRepository;
+import com.evaluacion.tareaevaluada3_cristianjimenez.Servicio.MuebleMapper;
+import com.evaluacion.tareaevaluada3_cristianjimenez.Servicio.MuebleService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+@ActiveProfiles("test")
+@SpringBootTest
+class MuebleServiceTest {
+
+    @Mock
+    private MuebleRepository muebleRepository;
+
+    @Mock
+    private MuebleMapper muebleMapper;
+
+    @InjectMocks
+    private MuebleService muebleService;
+
+    private Mueble muebleEntidad;
+    private MuebleDto muebleDTO;
+    private CrearMuebleRequest crearRequest;
+
+    @BeforeEach
+    void setUp() {
+
+        crearRequest = new CrearMuebleRequest();
+        crearRequest.setNombre_mueble("Silla Oficina");
+        crearRequest.setPrecio_base(150.0);
+        crearRequest.setStock(20);
+        crearRequest.setTamano("MEDIANO");
+
+        muebleEntidad = Mueble.builder()
+                .idMueble(1L)
+                .nombreMueble("Silla Oficina")
+                .precioBase(150.0)
+                .stock(20)
+                .tamano(Mueble.Tamano.MEDIANO)
+                .estado(Estado.ACTIVO)
+                .build();
+
+        muebleDTO = new MuebleDto();
+        muebleDTO.setId(1L);
+        muebleDTO.setNombre("Silla Oficina");
+        muebleDTO.setPrecioBase(150.0);
+        muebleDTO.setStock(20);
+        muebleDTO.setEstado("ACTIVO");
+
+        when(muebleMapper.toEntity(any(CrearMuebleRequest.class))).thenReturn(muebleEntidad);
+
+        when(muebleMapper.toDTO(any(Mueble.class))).thenReturn(muebleDTO);
+
+        // Comportamiento del Repositorio
+        when(muebleRepository.save(any(Mueble.class))).thenReturn(muebleEntidad);
+        when(muebleRepository.findById(1L)).thenReturn(Optional.of(muebleEntidad));
+        when(muebleRepository.findById(99L)).thenReturn(Optional.empty());
+        when(muebleRepository.findAll()).thenReturn(List.of(muebleEntidad));
+    }
+
+    @Test
+    @DisplayName("Crear Mueble: Exitoso")
+    void testCrearMueble_Exitoso() {
+        MuebleDto resultado = muebleService.crearMueble(crearRequest);
+
+        assertNotNull(resultado);
+        assertEquals(muebleDTO.getId(), resultado.getId());
+        assertEquals("Silla Oficina", resultado.getNombre());
+
+        verify(muebleMapper, times(1)).toEntity(crearRequest);
+        verify(muebleRepository, times(1)).save(muebleEntidad);
+        verify(muebleMapper, times(1)).toDTO(muebleEntidad);
+    }
+
+    @Test
+    @DisplayName("Listar Muebles: Con resultados")
+    void testListarMuebles_ConResultados() {
+        List<MuebleDto> resultados = muebleService.listarMuebles();
+
+        assertFalse(resultados.isEmpty());
+        assertEquals(1, resultados.size());
+        assertEquals("Silla Oficina", resultados.get(0).getNombre());
+
+        verify(muebleRepository, times(1)).findAll();
+        verify(muebleMapper, times(1)).toDTO(muebleEntidad);
+    }
+
+    @Test
+    @DisplayName("Listar Muebles: Vacio")
+    void testListarMuebles_Vacio() {
+        when(muebleRepository.findAll()).thenReturn(Collections.emptyList());
+
+        List<MuebleDto> resultados = muebleService.listarMuebles();
+
+        assertTrue(resultados.isEmpty());
+        verify(muebleRepository, times(1)).findAll();
+        verify(muebleMapper, never()).toDTO(any());
+    }
+
+    @Test
+    @DisplayName("Obtener Mueble por ID: Existente")
+    void testObtenerMueble_IdExistente() {
+        Optional<MuebleDto> resultado = muebleService.obtenerMueblePorId(1L);
+
+        assertTrue(resultado.isPresent());
+        assertEquals(muebleDTO.getNombre(), resultado.get().getNombre());
+
+        verify(muebleRepository, times(1)).findById(1L);
+        verify(muebleMapper, times(1)).toDTO(muebleEntidad);
+    }
+
+    @Test
+    @DisplayName("Obtener Mueble por ID: No Existente")
+    void testObtenerMueble_IdNoExistente() {
+        Optional<MuebleDto> resultado = muebleService.obtenerMueblePorId(99L);
+
+        assertTrue(resultado.isEmpty());
+
+        verify(muebleRepository, times(1)).findById(99L);
+        verify(muebleMapper, never()).toDTO(any());
+    }
+
+    @Test
+    @DisplayName("Actualizar Mueble: Exitoso")
+    void testActualizarMueble_Exitoso() {
+        CrearMuebleRequest requestActualizado = new CrearMuebleRequest();
+        requestActualizado.setNombre_mueble("Silla Gerencial");
+        requestActualizado.setPrecio_base(200.0);
+        requestActualizado.setStock(5);
+        requestActualizado.setTamano("GRANDE");
+
+        ArgumentCaptor<Mueble> muebleCaptor = ArgumentCaptor.forClass(Mueble.class);
+
+        MuebleDto dtoActualizado = new MuebleDto();
+        dtoActualizado.setId(1L);
+        dtoActualizado.setNombre("Silla Gerencial");
+        dtoActualizado.setPrecioBase(200.0);
+        dtoActualizado.setStock(5);
+
+        when(muebleMapper.toDTO(any(Mueble.class))).thenReturn(dtoActualizado);
+
+        MuebleDto resultado = muebleService.actualizarMueble(1L, requestActualizado);
+
+        assertNotNull(resultado);
+
+        assertEquals("Silla Gerencial", resultado.getNombre());
+        assertEquals(200.0, resultado.getPrecioBase());
+        assertEquals(5, resultado.getStock());
+
+        verify(muebleRepository, times(1)).findById(1L);
+        // Verificar que se llamó a save()
+        verify(muebleRepository, times(1)).save(muebleCaptor.capture());
+
+        Mueble entidadGuardada = muebleCaptor.getValue();
+        assertEquals("Silla Gerencial", entidadGuardada.getNombreMueble());
+        assertEquals(200.0, entidadGuardada.getPrecioBase());
+    }
+
+    @Test
+    @DisplayName("Actualizar Mueble: Falla si ID no existe")
+    void testActualizarMueble_IdNoExistente() {
+        Exception e = assertThrows(RuntimeException.class, () -> {
+            muebleService.actualizarMueble(99L, crearRequest);
+        });
+
+        assertEquals("Mueble no encontrado con id: 99", e.getMessage());
+        verify(muebleRepository, times(1)).findById(99L);
+        verify(muebleRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("Desactivar Mueble: Exitoso")
+    void testDesactivarMueble_Exitoso() {
+        ArgumentCaptor<Mueble> muebleCaptor = ArgumentCaptor.forClass(Mueble.class);
+
+        muebleService.desactivarMueble(1L);
+
+        verify(muebleRepository, times(1)).findById(1L);
+        verify(muebleRepository, times(1)).save(muebleCaptor.capture());
+
+        assertEquals(Estado.INACTIVO, muebleCaptor.getValue().getEstado());
+    }
+}
