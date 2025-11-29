@@ -30,18 +30,18 @@ public class ApiController {
 
     @PostMapping("/muebles")
     public ResponseEntity<MuebleDto> crearMueble(@RequestBody CrearMuebleRequest Dto) {
-        MuebleDto muebleCreado = muebleService.crearMueble(Dto); //
+        MuebleDto muebleCreado = muebleService.crearMueble(Dto);
         return new ResponseEntity<>(muebleCreado, HttpStatus.CREATED);
     }
 
     @GetMapping("/muebles")
     public ResponseEntity<List<MuebleDto>> listarMuebles() {
-        return ResponseEntity.ok(muebleService.listarMuebles()); //
+        return ResponseEntity.ok(muebleService.listarMuebles());
     }
 
     @GetMapping("/muebles/{id}")
     public ResponseEntity<MuebleDto> obtenerMueblePorId(@PathVariable Long id) {
-        return muebleService.obtenerMueblePorId(id) //
+        return muebleService.obtenerMueblePorId(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -49,7 +49,7 @@ public class ApiController {
     @PutMapping("/muebles/{id}")
     public ResponseEntity<MuebleDto> actualizarMueble(@PathVariable Long id, @RequestBody CrearMuebleRequest Dto) {
         try {
-            MuebleDto muebleActualizado = muebleService.actualizarMueble(id, Dto); //
+            MuebleDto muebleActualizado = muebleService.actualizarMueble(id, Dto);
             return ResponseEntity.ok(muebleActualizado);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
@@ -59,8 +59,18 @@ public class ApiController {
     @PostMapping("/muebles/{id}/desactivar")
     public ResponseEntity<MuebleDto> desactivarMueble(@PathVariable Long id) {
         try {
-            MuebleDto muebleDesactivado = muebleService.desactivarMueble(id); //
+            MuebleDto muebleDesactivado = muebleService.desactivarMueble(id);
             return ResponseEntity.ok(muebleDesactivado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PostMapping("/muebles/{id}/activar")
+    public ResponseEntity<MuebleDto> activarMueble(@PathVariable Long id) {
+        try {
+            MuebleDto muebleActivado = muebleService.activarMueble(id);
+            return ResponseEntity.ok(muebleActivado);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -79,17 +89,17 @@ public class ApiController {
 
     @PostMapping("/cotizar")
     public ResponseEntity<Double> cotizar(@RequestBody List<ItemVentaRequest> items) {
-        double total = ventaService.calcularCotizacion(items); //
+        double total = ventaService.calcularCotizacion(items);
         return ResponseEntity.ok(total);
     }
 
     @PostMapping("/ventas")
     public ResponseEntity<VentaResponse> vender(@RequestBody List<ItemVentaRequest> items) {
         try {
-            VentaResponse respuesta = ventaService.confirmarVenta(items); //
+            VentaResponse respuesta = ventaService.confirmarVenta(items);
             return ResponseEntity.ok(respuesta);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(new VentaResponse(e.getMessage(), 0.0)); //
+            return ResponseEntity.badRequest().body(new VentaResponse(e.getMessage(), 0.0));
         }
     }
 }
