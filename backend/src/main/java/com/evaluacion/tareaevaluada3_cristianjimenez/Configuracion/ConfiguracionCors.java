@@ -12,11 +12,11 @@ public class ConfiguracionCors implements WebMvcConfigurer {
                 .allowedOrigins("http://localhost:3000")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS");
     }
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("*") // CAMBIO: Permitir todo para pruebas (o pon la IP de tu servidor)
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS");
+    }
 }
 
-@Override
-public void addCorsMappings(CorsRegistry registry) {
-    registry.addMapping("/**")
-            .allowedOrigins("*") // CAMBIO: Permitir todo para pruebas (o pon la IP de tu servidor)
-            .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS");
-}
