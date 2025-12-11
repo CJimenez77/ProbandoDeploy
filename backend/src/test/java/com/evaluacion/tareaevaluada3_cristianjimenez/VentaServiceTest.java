@@ -41,6 +41,7 @@ class VentaServiceTest {
     private Mueble muebleStock1;
     private Variante varianteFija;
     private Variante variantePorcentaje;
+    // yo aca agrego cosaas ensdkjaskl
 
     @BeforeEach
     void setUp() {
